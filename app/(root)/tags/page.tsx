@@ -1,5 +1,6 @@
 import Filter from "@/components/shared/Filter";
 import NoResults from "@/components/shared/NoResult";
+import Pagination from "@/components/shared/Pagination";
 import LocalSearchBar from "@/components/shared/search/LocalSearchBar";
 import { TagFilters } from "@/constants/filter";
 import { getAllTags } from "@/lib/actions/tag.action";
@@ -7,10 +8,17 @@ import { SearchParamsProps } from "@/types";
 import Link from "next/link";
 import React from "react";
 
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Tags | Dev OverFlow",
+};
+
 const Page = async ({ searchParams }: SearchParamsProps) => {
   const result = await getAllTags({
     searchQuery: searchParams.q,
     filter: searchParams.filter,
+    page: searchParams.page ? +searchParams.page : 1,
   });
 
   return (
@@ -65,6 +73,12 @@ const Page = async ({ searchParams }: SearchParamsProps) => {
           />
         )}
       </section>
+      <div className="mt-10">
+        <Pagination
+          pageNumber={searchParams?.page ? +searchParams.page : 1}
+          isNext={result.isNext}
+        />
+      </div>
     </>
   );
 };

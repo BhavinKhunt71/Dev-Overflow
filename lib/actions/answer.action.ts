@@ -26,12 +26,23 @@ export async function createAnswer(params: CreateAnswerParams) {
       question,
     });
 
-    await Question.findByIdAndUpdate(question, {
+    const questionObject = await Question.findByIdAndUpdate(question, {
       $push: {
         answers: newAnswer._id,
       },
     });
 
+    await Interaction.create({
+      user: author,
+      action: "answer",
+      question,
+      answer: newAnswer._id,
+      tags: questionObject.tags,
+    });
+
+    await User.findByIdAndUpdate(author, {
+      $inc: { reputation: 10 },
+    });
     revalidatePath(path);
   } catch (error) {
     console.log(error);
@@ -43,8 +54,9 @@ export async function getAnswers(params: GetAnswersParams) {
   try {
     connectToDatabase();
 
-    const { questionId, sortBy } = params;
+    const { questionId, sortBy, page = 1, pageSize = 10 } = params;
 
+    const skipAmount = (page - 1) * pageSize;
     let sortOptions = {};
 
     switch (sortBy) {
@@ -69,9 +81,16 @@ export async function getAnswers(params: GetAnswersParams) {
       question: questionId,
     })
       .populate("author", "_id clerkId name picture")
+      .skip(skipAmount)
+      .limit(pageSize)
       .sort(sortOptions);
 
-    return { answers };
+    const totalAnswers = await Answer.countDocuments({
+      question: questionId,
+    });
+
+    const isNext = totalAnswers > skipAmount + answers.length;
+    return { answers, isNext };
   } catch (error) {
     console.log(error);
     throw error;
@@ -190,8 +209,8 @@ export async function getUserAnswers(params: GetUserStatsParams) {
       .populate("question", "title")
       .populate("author", "_id clerkId name picture");
 
-    const isNext = totalAnswers > skipAmount + userAnswers.length;
-    return { totalAnswers, answers: userAnswers, isNext };
+    const isNextAnswer = totalAnswers > skipAmount + userAnswers.length;
+    return { totalAnswers, answers: userAnswers, isNextAnswer };
   } catch (error) {
     console.log(error);
   }

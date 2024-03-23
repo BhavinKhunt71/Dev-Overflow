@@ -1,21 +1,20 @@
-import AnswerTab from "@/components/shared/AnswersTab";
-import ProfileLink from "@/components/shared/ProfileLink";
-import QuestionTab from "@/components/shared/QuestionTab";
-import Stats from "@/components/shared/Stats";
 import { Button } from "@/components/ui/button";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { getUserInfo } from "@/lib/actions/user.action";
-import { getJoinedMonthYear } from "@/lib/utils";
 import { URLProps } from "@/types";
-import { SignedIn, useAuth } from "@clerk/nextjs";
-import { Link } from "lucide-react";
+import { SignedIn, auth } from "@clerk/nextjs";
 import Image from "next/image";
+import Link from "next/link";
 import React from "react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { getJoinedMonthYear } from "@/lib/utils";
+import ProfileLink from "@/components/shared/ProfileLink";
+import Stats from "@/components/shared/Stats";
+import QuestionTab from "@/components/shared/QuestionTab";
+import AnswerTab from "@/components/shared/AnswersTab";
 
 const Profile = async ({ params, searchParams }: URLProps) => {
-  const { userId: clerkId } = useAuth();
   const userInfo = await getUserInfo({ userId: params.id });
-
+  const { userId: clerkId } = auth();
   return (
     <>
       <div className="flex flex-col-reverse items-start justify-between sm:flex-row">
@@ -64,6 +63,7 @@ const Profile = async ({ params, searchParams }: URLProps) => {
             )}
           </div>
         </div>
+
         <div className=" flex justify-end max-sm:mb-5 max-sm:w-full sm:mt-3 ">
           <SignedIn>
             {clerkId === userInfo?.user.clerkId && (
@@ -82,7 +82,7 @@ const Profile = async ({ params, searchParams }: URLProps) => {
         badges={userInfo?.badgeCounts}
         reputation={userInfo?.reputation}
       />
-      <div className="mt-10 flex gap-10">
+      <div className=" mt-10 flex gap-10">
         <Tabs defaultValue="top-posts" className=" flex-1">
           <TabsList className=" background-light800_dark400 min-h-[42px] p-1">
             <TabsTrigger value="top-posts" className=" tab">

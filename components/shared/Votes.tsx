@@ -11,6 +11,7 @@ import { formatAndDivideNumber } from "@/lib/utils";
 import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 import React, { useEffect } from "react";
+import { toast } from "../ui/use-toast";
 
 interface Props {
   type: string;
@@ -42,15 +43,21 @@ const Votes = ({
       questionId: JSON.parse(itemId),
       path: pathname,
     });
+
+    return toast({
+      title: `Question ${
+        !hasSaved ? "Saved in" : "Removed from your collection"
+      }`,
+      variant: !hasSaved ? "default" : "destructive",
+    });
   };
 
   const handleVote = async (action: string) => {
     if (!userId) {
-      return;
-      // return toast({
-      //   title: "Log in to vote",
-      //   description: "You need to log in to vote a question",
-      // });
+      return toast({
+        title: "Log in to vote",
+        description: "You need to log in to vote a question",
+      });
     }
 
     if (action === "upvote") {
@@ -72,10 +79,10 @@ const Votes = ({
         });
       }
 
-      // return toast({
-      //   title: `Upvote ${!hasupVoted ? "Successful" : "Removed"}`,
-      //   variant: !hasupVoted ? "default" : "destructive",
-      // });
+      return toast({
+        title: `Upvote ${!hasupVoted ? "Successful" : "Removed"}`,
+        variant: !hasupVoted ? "default" : "destructive",
+      });
 
       // todo: TOAST
     } else if (action === "downvote") {
@@ -98,10 +105,10 @@ const Votes = ({
       }
 
       // todo: TOAST
-      // return toast({
-      //   title: `Downvote ${!hasdownVoted ? "Successful" : "Removed"}`,
-      //   variant: !hasdownVoted ? "default" : "destructive",
-      // });
+      return toast({
+        title: `Downvote ${!hasdownVoted ? "Successful" : "Removed"}`,
+        variant: !hasdownVoted ? "default" : "destructive",
+      });
     }
   };
 

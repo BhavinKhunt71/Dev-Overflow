@@ -17,6 +17,7 @@ interface QuestionProps {
     _id: string;
     name: string;
     picture: string;
+    clerkId: string;
   };
   upvotes: string[];
   views: number;
@@ -73,27 +74,29 @@ const QuestionCard = ({
           href={`/profile/${author._id}`}
           textStyles="body-medium text-dark400_light700"
         />
-        <Metric
-          imageUrl="/assets/icons/like.svg"
-          alt="Upvotes"
-          value={formatAndDivideNumber(upvotes.length)}
-          title="Votes"
-          textStyles="small-medium text-dark400_light800"
-        />
-        <Metric
-          imageUrl="/assets/icons/message.svg"
-          alt="message"
-          value={formatAndDivideNumber(answers.length)}
-          title="Answers"
-          textStyles="small-medium text-dark400_light800"
-        />
-        <Metric
-          imageUrl="/assets/icons/eye.svg"
-          alt="eye"
-          value={formatAndDivideNumber(views)}
-          title="views"
-          textStyles="small-medium text-dark400_light800"
-        />
+        <div className="flex items-center gap-3 max-sm:flex-wrap max-sm:justify-start">
+          <Metric
+            imageUrl="/assets/icons/like.svg"
+            alt="Upvotes"
+            value={formatAndDivideNumber(upvotes.length)}
+            title="Votes"
+            textStyles="small-medium text-dark400_light800"
+          />
+          <Metric
+            imageUrl="/assets/icons/message.svg"
+            alt="message"
+            value={formatAndDivideNumber(answers.length)}
+            title="Answers"
+            textStyles="small-medium text-dark400_light800"
+          />
+          <Metric
+            imageUrl="/assets/icons/eye.svg"
+            alt="eye"
+            value={formatAndDivideNumber(views)}
+            title="views"
+            textStyles="small-medium text-dark400_light800"
+          />
+        </div>
       </div>
     </div>
   );

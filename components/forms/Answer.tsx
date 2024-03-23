@@ -1,6 +1,5 @@
 "use client";
-
-import React, { useRef, useState } from "react";
+import { useForm } from "react-hook-form";
 import {
   Form,
   FormControl,
@@ -8,24 +7,28 @@ import {
   FormItem,
   FormMessage,
 } from "../ui/form";
-import { useForm } from "react-hook-form";
-import { z } from "zod";
 import { AnswerSchema } from "@/lib/validations";
+import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Editor } from "@tinymce/tinymce-react";
+import { useRef, useState } from "react";
 import { useTheme } from "@/context/ThemeProvider";
 import { Button } from "../ui/button";
 import Image from "next/image";
 import { createAnswer } from "@/lib/actions/answer.action";
 import { usePathname } from "next/navigation";
+import { toast } from "../ui/use-toast";
 
 interface Props {
   question: string;
   questionId: string;
   authorId: string;
 }
+
 const Answer = ({ question, questionId, authorId }: Props) => {
+  console.log(question);
   const pathname = usePathname();
+  const [isSubmittingAI, setIsSubmittingAI] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { mode } = useTheme();
   const editorRef = useRef(null);
@@ -38,6 +41,7 @@ const Answer = ({ question, questionId, authorId }: Props) => {
 
   const handleCreateAnswer = async (values: z.infer<typeof AnswerSchema>) => {
     setIsSubmitting(true);
+
     try {
       await createAnswer({
         content: values.answer,
@@ -45,10 +49,12 @@ const Answer = ({ question, questionId, authorId }: Props) => {
         question: JSON.parse(questionId),
         path: pathname,
       });
-      form.reset();
 
+      // Reset the form and editor to empty
+      form.reset();
       if (editorRef.current) {
         const editor = editorRef.current as any;
+
         editor.setContent("");
       }
     } catch (error) {
@@ -56,32 +62,63 @@ const Answer = ({ question, questionId, authorId }: Props) => {
     } finally {
       setIsSubmitting(false);
     }
+
+    toast({
+      title: "Answer submitted successfully",
+    });
+  };
+
+  const generateAIAnswer = async () => {
+    if (!authorId) {
+      return;
+    }
+    setIsSubmittingAI(true);
+    try {
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_SERVER_URL}/api/chatgpt`,
+        {
+          method: "POST",
+          body: JSON.stringify({ question }),
+        }
+      );
+
+      const aiAnswer = await response.json();
+      const formattedAnswer = aiAnswer.reply.replace(/\n/g, "<br/>");
+
+      if (editorRef.current) {
+        const editor = editorRef.current as any;
+        editor.setContent(formattedAnswer);
+      }
+    } catch (error) {
+    } finally {
+      setIsSubmittingAI(false);
+    }
   };
 
   return (
     <div>
-      <div className="flex flex-col justify-between gap-5 sm:flex-row sm:items-center sm:gap-2">
+      <div className="mt-10 flex flex-col justify-between gap-5 sm:flex-row sm:items-center sm:gap-2">
         <h4 className="paragraph-semibold text-dark400_light800">
-          Write your answer here
+          Write your answers here
         </h4>
         <Button
           className="btn light-border-2 gap-1.5 rounded-md px-4 py-2.5 text-primary-500 shadow-none dark:text-primary-500"
-          //   onClick={generateAIAnswer}
+          onClick={generateAIAnswer}
         >
-          {/* {isSubmittingAI ? (
+          {isSubmittingAI ? (
             <>Generating...</>
           ) : (
-            <> */}
-          <Image
-            src="/assets/icons/stars.svg"
-            width={12}
-            height={12}
-            alt="star"
-            className="object-contain"
-          />
-          Generate AI answer
-          {/* </>
-          )} */}
+            <>
+              <Image
+                src="/assets/icons/stars.svg"
+                width={12}
+                height={12}
+                alt="star"
+                className="object-contain"
+              />
+              Generate AI answer
+            </>
+          )}
         </Button>
       </div>
       <Form {...form}>
@@ -105,6 +142,7 @@ const Answer = ({ question, questionId, authorId }: Props) => {
                     onEditorChange={(content) => {
                       field.onChange(content);
                     }}
+                    initialValue=""
                     init={{
                       height: 350,
                       menubar: false,
@@ -147,13 +185,14 @@ const Answer = ({ question, questionId, authorId }: Props) => {
               </FormItem>
             )}
           />
+
           <div className="flex justify-end">
             <Button
               type="submit"
               className="primary-gradient w-fit text-white"
               disabled={isSubmitting}
             >
-              {isSubmitting ? "Submitting..." : "Submit"}
+              {isSubmitting ? "Submitting" : "Submit"}
             </Button>
           </div>
         </form>
